@@ -1,0 +1,530 @@
+:root {
+  --primary: #ff6f00;
+  --primary-dark: #ff8f00;
+  --bg: #121212;
+  --text: #f5f5f5;
+  --card: #1e1e1e;
+  --accent: #ffcc80;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* LEFT SIDE: scrollable form */
+.form-column {
+  flex: 1 1 55%;
+  overflow-y: auto;
+  height: 100%;
+  padding-right: 10px;
+}
+
+.app {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+h1, h2, h3, label {
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+input, select, button {
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #2c2c2c;
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+input:read-only {
+  background: #1d1d1d;
+}
+
+button {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border: none;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: var(--primary-dark);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.personal-box {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 10px rgba(255, 111, 0, 0.3);
+}
+
+.personal-fields {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1 1 45%;
+  min-width: 220px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+/* EMPLOYEE ID prefix */
+.id-input {
+  display: flex;
+  align-items: center;
+  background: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.id-input .prefix {
+  background: #1a1a1a;
+  color: var(--accent);
+  padding: 7px;
+  font-weight: bold;
+  border-right: 1px solid #444;
+}
+
+.id-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 10px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.expense-row {
+  background: #2a2a2a;
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 10px rgba(255, 111, 0, 0.3);
+}
+
+.type-heading {
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--primary-dark);
+  text-align: left;
+}
+
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.type-option label {
+  flex: 1;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.bin-icon {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 19px;
+  cursor: pointer;
+  padding: 0 9px;
+}
+
+.type-fields {
+  display: none;
+  background: #1a1a1a;
+  padding: 12px;
+  border-radius: 5px;
+  margin: 10px 0 10px 0;
+  box-shadow: 0 0 8px rgba(255, 111, 0, 0.3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.type-fields input[type="number"] {
+  width: 90px;
+}
+
+.type-fields input[type="file"] {
+  flex: 1;
+}
+
+.file-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.file-preview div {
+  background: var(--accent);
+  color: black;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.file-preview div button {
+  background: transparent;
+  border: none;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* RIGHT SIDE: sticky, scrollable preview */
+.summary-column {
+  flex: 1 1 40%;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  align-self: flex-start;
+}
+
+/* Preview content inside summary */
+#live-summary p,
+#live-summary li {
+  margin: 6px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#summary-expense-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 12px;
+}
+
+/* Highlight filled expenses */
+#summary-expense-list li.filled {
+  background: var(--accent);
+  color: black;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.loader {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: var(--primary);
+  font-weight: bold;
+  z-index: 10;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .form-column, .summary-column {
+    flex: 1 1 100%;
+    max-height: none;
+    position: static;
+  }
+
+  .summary-column {
+    margin-top: 20px;
+  }
+
+  .personal-fields {
+    flex-direction: column;
+  }
+
+  .button-row {
+    flex-direction: column;
+  }
+
+  .type-fields input {
+    width: 100%;
+  }
+}
+/* Custom Scrollbar for dark theme */
+.form-column::-webkit-scrollbar,
+.summary-column::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+.form-column::-webkit-scrollbar-track,
+.summary-column::-webkit-scrollbar-track {
+  background: #1d1d1d;
+  border-radius: 10px;
+}
+
+/* Handle */
+.form-column::-webkit-scrollbar-thumb,
+.summary-column::-webkit-scrollbar-thumb {
+  background-color: var(--primary); /* Orange shade */
+  border-radius: 10px;
+  border: 2px solid #1d1d1d; /* Gives the thumb padding against the track */
+  transition: background 0.3s;
+}
+
+/* Hover effect */
+.form-column::-webkit-scrollbar-thumb:hover,
+.summary-column::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Optionally hide scrollbars until hover */
+.form-column,
+.summary-column {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) #1d1d1d;
+  overflow-y: auto;
+}
+
+/* Hide scrollbar in Firefox until hover */
+@media screen and (-moz-touch-enabled: 0) {
+  .form-column::-webkit-scrollbar,
+  .summary-column::-webkit-scrollbar {
+    display: none;
+  }
+  .form-column:hover::-webkit-scrollbar,
+  .summary-column:hover::-webkit-scrollbar {
+    display: block;
+  }
+}
+/* Custom Scrollbar Styling */
+.form-column::-webkit-scrollbar,
+.summary-column::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.form-column::-webkit-scrollbar-track,
+.summary-column::-webkit-scrollbar-track {
+  background: #1d1d1d;
+  border-radius: 10px;
+}
+
+.form-column::-webkit-scrollbar-thumb,
+.summary-column::-webkit-scrollbar-thumb {
+  background-color: var(--primary);
+  border-radius: 10px;
+  border: 2px solid #1d1d1d;
+  transition: background 0.3s;
+}
+
+.form-column::-webkit-scrollbar-thumb:hover,
+.summary-column::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-dark);
+}
+
+.form-column,
+.summary-column {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) #1d1d1d;
+  overflow-y: auto;
+}
+
+/* Expense Preview: Grouped by Date */
+.date-expense-list {
+  list-style: none;
+  padding-left: 25px;
+  margin-top: 2px;
+}
+
+.date-expense-list li {
+  background: var(--accent);
+  color: black;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+/* 📎 File preview pills (responsive) */
+.file-preview div {
+  background: var(--accent);
+  color: black;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 5px;
+  max-width: fit-content;
+  height: fit-content;
+}
+
+/* 💰 Amount styling */
+.date-expense-list .amount {
+  color: #ffd699; /* softer orange for contrast */
+}
+
+/* ➕ Date total at bottom */
+.date-total {
+  text-align: right;
+  margin-top: 4px;
+  font-weight: bold;
+  color: #FF0000;
+  font-size: 11px;
+}
+/* 💰 Make expense amount red */
+.date-expense-list .amount {
+  color: #FF0000; /* vibrant red */
+  font-weight: bold;
+}
+
+/* 📉 Reduce font size under EXPENSES section (excluding total) */
+/* 🔤 Reduce font size inside expense preview list */
+.date-expense-list li {
+  font-size: 12px; /* or adjust to your preferred size */
+  line-height: 1.3;
+  color: var(--text); /* preserves your dark theme contrast */
+}
+
+/* 💰 Preserve total styling as-is */
+.date-total {
+  font-size: 14px; /* bold badge already styled */
+  font-weight: bold;
+  background-color: #ffcc80;
+  color: black;
+  padding: 4px 10px;
+  border-radius: 30px;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+
+/* 📎 File preview pills: compact size */
+.file-preview div {
+  background: var(--accent);
+  color: black;
+  padding: 1px 1px;
+  border-radius: 7px;
+  font-size: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-height: 16px;
+  max-width: max-content;
+}
+.date-total {
+  transition: transform 0.2s ease;
+}
+.date-total.updated {
+  transform: scale(1.05);
+}
+
+/* 🗓️ Date heading inside expense preview */
+#summary-expense-list > li > strong {
+  font-size: 13px;         /* Smaller than default */
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* 🎯 Badge for total amount under each date */
+.date-total {
+  font-size: 12px;         /* Reduced from 14px */
+  padding: 2px 8px;        /* Tighter shape */
+  border-radius: 12px;     /* Compact pill */
+  background-color: #ffcc80;
+  color: black;
+  max-width: fit-content;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+h3 {
+  font-size: 14px;   /* Subheadings like Expenses under PREVIEW */
+}
+
+/* 💡 Optional: label text inside form fields */
+label {
+  font-size: 14px;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+h1 {
+  font-size: 22px;   /* App title (MONTHLY EXPENSE) */
+  /* 🧍 PERSONAL DETAILS Heading */
+.personal-box h2 {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+/* 📅 DATE Heading under each expense row */
+.type-heading {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--primary-dark);
+  margin-top: 20px;
+  margin-bottom: 6px;
+}
+.personal-box label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
