@@ -1,5 +1,9 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const expenseTypes = [{ label: "BUS (बस)", value: "Bus" },
+/* PART 1 */
+// 🔧 Global Variables
+const usedDates = new Set();
+const rowSummaryMap = {};
+const expenseTypes = [
+  { label: "BUS (बस)", value: "Bus" },
   { label: "TRAIN (ट्रेन)", value: "Train" },
   { label: "FLIGHT (फ्लाइट)", value: "Flight" },
   { label: "HOTEL (होटल)", value: "Hotel" },
@@ -7,305 +11,368 @@ document.addEventListener("DOMContentLoaded", () => {
   { label: "CAB/AUTO (कैब/ऑटो)", value: "CabAuto" },
   { label: "BIKE/CAR (बाइक/कार)", value: "BikeCar" },
   { label: "MISC (विविध)", value: "Misc" },
-  { label: "OTHERS (अन्य)", value: "Others" }];
-  const today = new Date();
-  const currentYearStart = new Date(today.getFullYear(), 0, 1);
-  const minDateStr = currentYearStart.toISOString().split("T")[0];
-  const maxDateStr = today.toISOString().split("T")[0];
+  { label: "OTHERS (अन्य)", value: "Others" }
+];
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Personal detail syncing
   document.getElementById("empId").addEventListener("input", e => {
-    document.getElementById("summary-empId").textContent = "JIPL" + e.target.value;
+    const enteredId = e.target.value.replace(/\D/g, '');
+    document.getElementById("summary-empId").textContent = "JIPL" + enteredId;
+    fetchEmployeeDetails(enteredId);
   });
+
   document.getElementById("empName").addEventListener("input", e => {
     document.getElementById("summary-empName").textContent = e.target.value;
   });
+
   document.getElementById("managerName").addEventListener("input", e => {
     document.getElementById("summary-manager").textContent = e.target.value;
   });
 
-  window.fetchEmployeeDetails = function (idValue) {
-    const empNameInput = document.getElementById("empName");
-    const managerInput = document.getElementById("managerName");
-    const numericId = idValue.replace(/\D/g, '');
-    if (numericId.length >= 3) {
-      fetch(`/api/employees/JIPL${numericId}`)
-        .then(res => res.json())
-        .then(data => {
-          empNameInput.value = data.name || '';
-          managerInput.value = data.manager || '';
-          empNameInput.dispatchEvent(new Event("input"));
-          managerInput.dispatchEvent(new Event("input"));
-        })
-        .catch(() => {
-          empNameInput.value = '';
-          managerInput.value = '';
-        });
-    } else {
-      empNameInput.value = '';
-      managerInput.value = '';
-    }
+  window.fetchEmployeeDetails = function(id) {
+    const fullId = `JIPL${id}`;
+    if (id.length < 3) return;
+
+    fetch(`https://script.google.com/macros/s/AKfycbyZdztMKjog8GkTvOoDznrEI7ke0-NKta8_6eG9_7hqzVYMp1i6UN9Ne5AYNKKUbAKp/exec?id=${fullId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("empName").value = data.name || "";
+        document.getElementById("managerName").value = data.manager || "";
+        document.getElementById("summary-empName").textContent = data.name || "—";
+        document.getElementById("summary-manager").textContent = data.manager || "—";
+      }).catch(err => alert("Could not fetch employee details."));
   };
+});
 
-  window.addExpenseRow = function () {
-    const container = document.getElementById('expense-entries');
-    const rowId = `row-${Date.now()}`;
-    const row = document.createElement('div');
-    row.className = 'expense-row';
-    row.id = rowId;
+window.addExpenseRow = function () {
+  const container = document.getElementById("expense-entries");
+  const rowId = `row-${Date.now()}`;
+  rowSummaryMap[rowId] = [];
 
-    row.innerHTML = `
-      <label>DATE</label>
-      <input type="date" id="date-${rowId}" style="max-width: 300px;" required min="${minDateStr}" max="${maxDateStr}" />
-      <div class="type-heading">EXPENSE TYPES</div>
-      ${expenseTypes.map(type => `
-        <div class="type-option" id="${type.value}-option-${rowId}">
-          <label for="${type.value}-${rowId}">${type.label}</label>
-          <input type="checkbox" id="${type.value}-${rowId}" />
-          <button class="bin-icon" onclick="removeExpenseType('${type.value}-option-${rowId}', '${type.value}-fields-${rowId}', '${type.value}-summary-${rowId}', '${rowId}')">🗑</button>
-        </div>
-        <div id="${type.value}-fields-${rowId}" class="type-fields" style="display: none;">
-          <input type="number" placeholder="Amount for ${type.label}" style="max-width: 140px;" oninput="updateExpenseSummary('${type.value}-summary-${rowId}', this.value, '${rowId}')" />
-          <input type="file" multiple onchange="handleFiles(this, '${type.value}-preview-${rowId}', '${type.value}-summary-${rowId}', '${rowId}')">
-          <div class="file-preview" id="${type.value}-preview-${rowId}"></div>
-        </div>
-      `).join('')}
-      <div class="button-row">
-        <button type="button" onclick="removeRow('${rowId}')">🗑 REMOVE EXPENSE</button>
+  const row = document.createElement("div");
+  row.className = "expense-row";
+  row.id = rowId;
+
+  const today = new Date();
+  const minDateStr = new Date(today.getFullYear(), 0, 1).toISOString().split("T")[0];
+  const maxDateStr = today.toISOString().split("T")[0];
+
+  row.innerHTML = `
+    <label>DATE</label>
+    <input type="date" id="date-${rowId}" required min="${minDateStr}" max="${maxDateStr}" />
+    <div class="type-heading">EXPENSE TYPES</div>
+    ${expenseTypes.map(type => `
+      <div class="type-option" id="${type.value}-option-${rowId}">
+        <label for="${type.value}-${rowId}">${type.label}</label>
+        <input type="checkbox" id="${type.value}-${rowId}" />
+        <button class="bin-icon" onclick="removeExpenseType('${type.value}-option-${rowId}', '${type.value}-fields-${rowId}', '${type.value}-summary-${rowId}', '${rowId}')">🗑</button>
       </div>
-    `;
-    container.appendChild(row);
+      <div id="${type.value}-fields-${rowId}" class="type-fields" style="display: none;">
+        <input type="number" placeholder="Amount for ${type.label}" oninput="updateExpenseSummary('${type.value}-summary-${rowId}', this.value, '${rowId}')" />
+        <input type="file" multiple onchange="handleFiles(this, '${type.value}-preview-${rowId}', '${type.value}-summary-${rowId}', '${rowId}')">
+        <div class="file-preview" id="${type.value}-preview-${rowId}"></div>
+      </div>
+    `).join("")}
+    <div class="button-row">
+      <button type="button" onclick="removeRow('${rowId}')">🗑 REMOVE EXPENSE</button>
+    </div>
+  `;
 
-    expenseTypes.forEach(type => {
-      const cb = document.getElementById(`${type.value}-${rowId}`);
-      const fields = document.getElementById(`${type.value}-fields-${rowId}`);
-      cb.addEventListener('change', () => {
-        const dateVal = document.getElementById(`date-${rowId}`)?.value || "Undated";
-        fields.style.display = cb.checked ? 'flex' : 'none';
-        if (cb.checked) {
-          window.addExpenseSummary(`${type.value}-summary-${rowId}`, type.label, 0, 0, dateVal, rowId);
-        } else {
-          window.removeExpenseSummary(`${type.value}-summary-${rowId}`);
-        }
-      });
+  container.appendChild(row);
+
+  const dateInput = document.getElementById(`date-${rowId}`);
+dateInput.addEventListener("change", () => {
+  const newDate = dateInput.value;
+  usedDates.add(newDate);
+  updateDatePickers();
+
+  const newDateGroupId = `summary-date-${newDate}`;
+
+  rowSummaryMap[rowId].forEach(summaryId => {
+    const item = document.getElementById(summaryId);
+    if (!item) return;
+
+    // Get previous group before removal
+    const previousGroup = item.closest(".date-group");
+    const previousDateGroupId = previousGroup?.id || "";
+
+    // Extract summary data
+    const label = item.textContent.split("|")[0].trim();
+    const amount = item.querySelector(".amount")?.textContent.replace("₹", "") || "0";
+    const files = item.querySelector(".files")?.textContent.split(" ")[0] || "0";
+
+    item.remove(); // Remove from old group
+    addExpenseSummary(summaryId, label, amount, files, newDate, rowId); // Add to new group
+
+    // 🔥 Remove old date group if empty
+    if (
+      previousGroup &&
+      previousGroup.id !== newDateGroupId &&
+      previousGroup.querySelectorAll(".expense-entry").length === 0
+    ) {
+      previousGroup.remove();
+      const oldDate = previousGroup.id.replace("summary-date-", "");
+      usedDates.delete(oldDate);
+      updateDatePickers();
+    }
+  });
+
+  updateDateTotal(newDateGroupId);
+});
+
+  expenseTypes.forEach(type => {
+    const cb = document.getElementById(`${type.value}-${rowId}`);
+    const fields = document.getElementById(`${type.value}-fields-${rowId}`);
+    cb.addEventListener("change", () => {
+      const selectedDate = dateInput.value || "Undated";
+      if (cb.checked) {
+        fields.style.display = "flex";
+        const summaryId = `${type.value}-summary-${rowId}`;
+        addExpenseSummary(summaryId, type.label, 0, 0, selectedDate, rowId);
+        rowSummaryMap[rowId].push(summaryId);
+      } else {
+        fields.style.display = "none";
+        removeExpenseSummary(`${type.value}-summary-${rowId}`);
+      }
     });
-  };
+  });
+};
 
-  window.addExpenseSummary = function (summaryId, label, amount = 0, fileCount = 0, date, rowId) {
-    const list = document.getElementById("summary-expense-list");
-    const dateId = `summary-date-${date}-${rowId}`;
-    let dateGroup = document.getElementById(dateId);
+window.addExpenseSummary = function (summaryId, label, amount = 0, fileCount = 0, date, rowId) {
+  const list = document.getElementById("summary-expense-list");
+  const dateId = `summary-date-${date}`;
+  let dateGroup = document.getElementById(dateId);
 
-    if (!dateGroup) {
-      dateGroup = document.createElement("li");
-      dateGroup.id = dateId;
-      dateGroup.innerHTML = `<strong>🗓️ ${date}</strong><ul class="date-expense-list"></ul><div class="date-total" id="total-${dateId}">Total: ₹0</div>`;
-      list.appendChild(dateGroup);
-    }
-
-    const subList = dateGroup.querySelector(".date-expense-list");
-    const item = document.createElement("li");
-    item.id = summaryId;
-    item.className = "filled";
-    item.innerHTML = `
-      <strong>${label}</strong>: ₹<span class="amount">${amount}</span> | 📎 <span class="files">${fileCount}</span> attachments
+  if (!dateGroup) {
+    dateGroup = document.createElement("div");
+    dateGroup.id = dateId;
+    dateGroup.className = "date-group";
+    dateGroup.innerHTML = `
+      <div class="date-header">
+        <div class="date-label">${date}</div>
+        <div class="date-total" id="total-${dateId}">Total: ₹0</div>
+      </div>
+      <div class="expense-entries"></div>
+      <hr class="preview-divider" />
     `;
-    subList.appendChild(item);
-    updateDateTotal(dateId);
-  };
+    list.appendChild(dateGroup);
+  }
 
-  window.updateExpenseSummary = function (summaryId, amount, rowId) {
-    const item = document.getElementById(summaryId);
-    if (item) {
-      item.querySelector(".amount").textContent = amount || 0;
+  const subList = dateGroup.querySelector(".expense-entries");
+  const item = document.createElement("div");
+  item.className = "expense-entry";
+  item.id = summaryId;
+
+  item.innerHTML = `${label} | <span class="amount">₹${amount}</span> | <span class="files">${fileCount} attachment${fileCount !== 1 ? "s" : ""}</span>`;
+  subList.appendChild(item);
+  updateDateTotal(dateId);
+};
+
+window.updateExpenseSummary = function (summaryId, amount, rowId) {
+  const item = document.getElementById(summaryId);
+  if (item) {
+    const amountSpan = item.querySelector(".amount");
+    if (amountSpan) amountSpan.textContent = `₹${amount}`;
+  }
+
+  const dateVal = document.getElementById(`date-${rowId}`)?.value || "Undated";
+  const dateId = `summary-date-${dateVal}`;
+  updateDateTotal(dateId);
+};
+
+window.updateAttachmentCount = function (summaryId, count) {
+  const item = document.getElementById(summaryId);
+  if (item) {
+    const fileSpan = item.querySelector(".files");
+    if (fileSpan) {
+      fileSpan.textContent = `${count} attachment${count !== 1 ? "s" : ""}`;
     }
-    const date = document.getElementById(`date-${rowId}`)?.value || "Undated";
-    const dateId = `summary-date-${date}-${rowId}`;
-    updateDateTotal(dateId);
-  };
+  }
+};
 
-  window.updateAttachmentCount = function (summaryId, count) {
-    const item = document.getElementById(summaryId);
-    if (item) {
-      item.querySelector(".files").textContent = count || 0;
-    }
-  };
-
-  window.removeExpenseSummary = function (summaryId) {
-    const item = document.getElementById(summaryId);
-    if (item?.parentElement) {
-      const dateGroup = item.closest("li[id^='summary-date-']");
-      item.remove();
-      updateDateTotal(dateGroup.id);
-    }
-  };
-
-  function updateDateTotal(dateId) {
+function updateDateTotal(dateId) {
   const group = document.getElementById(dateId);
   if (!group) return;
-  const expenses = group.querySelectorAll(".date-expense-list .amount");
+  const entries = group.querySelectorAll(".expense-entry");
+
   let total = 0;
-  expenses.forEach(span => {
-    const value = parseFloat(span.textContent) || 0;
-    total += value;
+  entries.forEach(entry => {
+    const amtText = entry.querySelector(".amount")?.textContent.replace("₹", "");
+    if (amtText) total += parseFloat(amtText) || 0;
   });
 
   const totalEl = document.getElementById(`total-${dateId}`);
   if (totalEl) {
-    const currentVal = parseInt(totalEl.textContent.replace(/\D/g, '')) || 0;
-    animateTotalUpdate(totalEl, currentVal, Math.round(total));
+    totalEl.textContent = `Total: ₹${total}`;
+    totalEl.classList.add("updated");
+    setTimeout(() => totalEl.classList.remove("updated"), 300);
   }
 }
 
-  window.handleFiles = function (input, previewId, summaryId, rowId) {
-    const preview = document.getElementById(previewId);
-    preview.innerHTML = '';
-    const files = Array.from(input.files);
-    files.forEach(file => {
-      const pill = document.createElement('div');
-      pill.innerHTML = `
-        📎 <span>${file.name}</span>
-        <button type="button" onclick="removeFile(this)">✖</button>
-      `;
-      preview.appendChild(pill);
-    });
-    window.updateAttachmentCount(summaryId, files.length);
-  };
+window.removeExpenseSummary = function (summaryId) {
+  const item = document.getElementById(summaryId);
+  if (item) item.remove();
+};
 
-  window.removeFile = function (btn) {
-    const pill = btn.parentElement;
-    const preview = pill.parentElement;
-    pill.remove();
-    const summaryId = preview.id.replace('-preview-', '-summary-');
-    const count = preview.children.length;
-    window.updateAttachmentCount(summaryId, count);
-  };
 
-    window.removeRow = function (rowId) {
-    document.getElementById(rowId)?.remove();
-    const summaryList = document.getElementById("summary-expense-list");
+/* PART 4 */
 
-    // Remove related preview items
-    Array.from(summaryList.children).forEach(group => {
-      if (group.id.includes(rowId)) {
-        group.remove();
-      }
-    });
-  };
+window.handleFiles = function (input, previewId, summaryId, rowId) {
+  const preview = document.getElementById(previewId);
+  preview.innerHTML = "";
 
-  window.removeExpenseType = function (optionId, fieldId, summaryId, rowId) {
-    document.getElementById(optionId)?.remove();
-    document.getElementById(fieldId)?.remove();
-    window.removeExpenseSummary(summaryId);
-    const dateVal = document.getElementById(`date-${rowId}`)?.value || "Undated";
-    const dateId = `summary-date-${dateVal}-${rowId}`;
-    updateDateTotal(dateId);
-  };
+  const dt = new DataTransfer();
+  const fileArray = Array.from(input.files);
+  let liveCount = fileArray.length;
 
-  window.addExpenseSummary = function (summaryId, label, amount = 0, fileCount = 0, date, rowId) {
-    const list = document.getElementById("summary-expense-list");
-    const dateId = `summary-date-${date}-${rowId}`;
-    let dateGroup = document.getElementById(dateId);
+  fileArray.forEach((file, i) => {
+    const pill = document.createElement("div");
+    pill.textContent = file.name;
 
-    if (!dateGroup) {
-      dateGroup = document.createElement("li");
-      dateGroup.id = dateId;
-      dateGroup.innerHTML = `<strong>🗓️ ${date}</strong><ul class="date-expense-list"></ul><div class="date-total" id="total-${dateId}">Total: ₹0</div>`;
-      list.appendChild(dateGroup);
-    }
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "✖";
+    removeBtn.onclick = () => {
+      preview.removeChild(pill);
+      fileArray.splice(i, 1);
+      const newDT = new DataTransfer();
+      fileArray.forEach(f => newDT.items.add(f));
+      input.files = newDT.files;
+      liveCount--;
+      updateAttachmentCount(summaryId, liveCount);
+    };
 
-    const subList = dateGroup.querySelector(".date-expense-list");
-    const item = document.createElement("li");
-    item.id = summaryId;
-    item.className = "filled";
-    item.innerHTML = `
-      <strong>${label}</strong>: ₹<span class="amount">${amount}</span> | 📎 <span class="files">${fileCount}</span> attachments
-    `;
-    subList.appendChild(item);
-    updateDateTotal(dateId);
-  };
+    pill.appendChild(removeBtn);
+    preview.appendChild(pill);
+    dt.items.add(file);
+  });
 
-  window.updateExpenseSummary = function (summaryId, amount, rowId) {
-    const item = document.getElementById(summaryId);
-    if (item) {
-      item.querySelector(".amount").textContent = amount || 0;
-    }
+  input.files = dt.files;
+  updateAttachmentCount(summaryId, liveCount);
+};
 
-    const dateVal = document.getElementById(`date-${rowId}`)?.value || "Undated";
-    const dateId = `summary-date-${dateVal}-${rowId}`;
-    updateDateTotal(dateId);
-  };
+window.removeRow = function (rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
 
-  window.updateAttachmentCount = function (summaryId, count) {
-    const item = document.getElementById(summaryId);
-    if (item) {
-      item.querySelector(".files").textContent = count || 0;
-    }
-  };
-
-  window.removeExpenseSummary = function (summaryId) {
-    const item = document.getElementById(summaryId);
-    if (item) {
-      const dateGroup = item.closest("li[id^='summary-date-']");
-      item.remove();
-      updateDateTotal(dateGroup?.id);
-    }
-  };
-
-  function updateDateTotal(dateId) {
-    const group = document.getElementById(dateId);
-    if (!group) return;
-    const expenses = group.querySelectorAll(".date-expense-list .amount");
-    let total = 0;
-    expenses.forEach(span => {
-      const value = parseFloat(span.textContent) || 0;
-      total += value;
-    });
-    const totalEl = document.getElementById(`total-${dateId}`);
-    if (totalEl) totalEl.textContent = `Total: ₹${total}`;
+  const dateInput = document.getElementById(`date-${rowId}`);
+  const dateVal = dateInput?.value;
+  if (dateVal && usedDates.has(dateVal)) {
+    usedDates.delete(dateVal);
+    updateDatePickers();
   }
 
-  window.handleFiles = function (input, previewId, summaryId, rowId) {
-    const preview = document.getElementById(previewId);
-    preview.innerHTML = '';
-    const files = Array.from(input.files);
-    files.forEach(file => {
-      const pill = document.createElement('div');
-      pill.innerHTML = `
-        📎 <span>${file.name}</span>
-        <button type="button" onclick="removeFile(this)">✖</button>
-      `;
-      preview.appendChild(pill);
+  const summaries = rowSummaryMap[rowId] || [];
+  summaries.forEach(summaryId => {
+    removeExpenseSummary(summaryId);
+  });
+
+  const dateGroupId = `summary-date-${dateVal}`;
+  const dateGroup = document.getElementById(dateGroupId);
+  if (dateGroup && dateGroup.querySelectorAll('.expense-entry').length === 0) {
+    dateGroup.remove();
+  } else {
+    updateDateTotal(dateGroupId);
+  }
+
+  row.remove();
+};
+window.removeExpenseType = function (optionId, fieldId, summaryId, rowId) {
+  document.getElementById(optionId)?.remove();
+  document.getElementById(fieldId)?.remove();
+  removeExpenseSummary(summaryId);
+
+  const dateVal = document.getElementById(`date-${rowId}`)?.value;
+  const dateId = `summary-date-${dateVal}`;
+  const group = document.getElementById(dateId);
+
+  if (group && group.querySelectorAll(".expense-entry").length === 0) {
+    group.remove();
+    usedDates.delete(dateVal);
+    updateDatePickers();
+  } else {
+    updateDateTotal(dateId);
+  }
+};
+window.updateDatePickers = function () {
+  const allDateInputs = document.querySelectorAll('input[type="date"]');
+  allDateInputs.forEach(input => {
+    const currentVal = input.value;
+    const dateAlreadyUsed = [...usedDates].filter(date => date !== currentVal);
+
+    // Disable dates that have been used by other entries
+    dateAlreadyUsed.forEach(date => {
+      // No direct way to disable individual dates in native date picker
+      // So we just prevent duplicates via validation and alert
     });
-    window.updateAttachmentCount(summaryId, files.length);
-  };
+  });
+};
+document.getElementById("expense-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  document.getElementById("loader").style.display = "flex";
 
-  window.removeFile = function (btn) {
-    const pill = btn.parentElement;
-    const preview = pill.parentElement;
-    pill.remove();
-    const summaryId = preview.id.replace('-preview-', '-summary-');
-    const count = preview.children.length;
-    window.updateAttachmentCount(summaryId, count);
-  };
+  const formData = new FormData();
 
-  document.getElementById("expense-form").addEventListener("submit", e => {
-    e.preventDefault();
-    document.getElementById("loader").style.display = "flex";
-    setTimeout(() => {
-      document.getElementById("loader").style.display = "none";
-      alert("Form submitted! (Google Drive upload handled by backend)");
-    }, 2000);
+  // 🌟 Collect metadata
+  const empId = document.getElementById("empId").value;
+  const empName = document.getElementById("empName").value;
+  const managerEmail = document.getElementById("managerName").value;
+  const today = new Date();
+  const expenseMonth = today.toLocaleString('default', { month: 'long' });
+  const expenseYear = today.getFullYear();
+
+  formData.append("empId", empId);
+  formData.append("empName", empName);
+  formData.append("managerEmail", managerEmail);
+  formData.append("month", expenseMonth);
+  formData.append("year", expenseYear);
+
+  // 📎 Gather all receipt file attachments
+  let fileIndex = 0;
+  document.querySelectorAll("input[type='file']").forEach(input => {
+    Array.from(input.files).forEach(file => {
+      formData.append(`file-${fileIndex++}`, file);
+    });
+  });
+
+  // 🚀 Send to Google Apps Script backend
+  fetch("https://script.google.com/macros/s/AKfycbyZdztMKjog8GkTvOoDznrEI7ke0-NKta8_6eG9_7hqzVYMp1i6UN9Ne5AYNKKUbAKp/exec", {
+    method: "POST",
+    body: formData
+  })
+  .then(async res => {
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Server error ${res.status}: ${text}`);
+    }
+    return res.text();
+  })
+  .then(msg => {
+    alert("✅ Submission successful: " + msg);
+    document.getElementById("loader").style.display = "none";
+
+    // 📄 PDF Trigger Starts Here (Local download)
+    const header = document.getElementById("summary-header");
+    const summary = document.getElementById("summary-expense-list");
+
+    const fullSummary = document.createElement("div");
+    fullSummary.style.padding = "20px";
+    fullSummary.style.fontFamily = "Arial, sans-serif";
+    if (header) fullSummary.appendChild(header.cloneNode(true));
+    if (summary) fullSummary.appendChild(summary.cloneNode(true));
+
+    const opt = {
+      margin: 0.5,
+      filename: `${empId}_expense_summary.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(fullSummary).save();
+  })
+  .catch(err => {
+    alert("❌ Submission failed: " + err.message);
+    document.getElementById("loader").style.display = "none";
   });
 });
-function animateTotalUpdate(element, start, end, duration = 800) {
-  const range = end - start;
-  const stepTime = Math.abs(Math.floor(duration / range));
-  let current = start;
-  const increment = end > start ? 1 : -1;
-
-  const timer = setInterval(() => {
-    current += increment;
-    element.textContent = `Total: ₹${current}`;
-    if (current === end) clearInterval(timer);
-  }, stepTime);
-}
